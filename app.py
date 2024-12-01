@@ -1,6 +1,7 @@
 import os
 import subprocess
 import random
+import time
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -16,13 +17,9 @@ PROGRAMS_LIST = [
     Output: ABCD ACBD ACDB CABD CADB CDAB
     Input: str1 = "AB", str2 = "C"
     Output: ABC ACB CAB''',
-    
     "A program that checks if a number is a palindrome.",
-    
     "A program that finds the kth smallest element in a given binary search tree.",
-    
     "A program that run BFS on a graph.",
-    
     "A program that implements dijkstra's algorithm.",
 ]
 
@@ -58,16 +55,24 @@ file_path = "generatedcode.py"
 with open(file_path, "w") as file:
     file.write(generated_code)
 
+def measure_execution_time():
+    start_time = time.time()
+    result = subprocess.run(["python", file_path], capture_output=True, text=True)
+    if result.returncode == 0 and "All tests passed successfully!" in result.stdout:
+        end_time = time.time()
+        execution_time = (end_time - start_time) * 1000  # Convert to milliseconds
+        return execution_time
+    return None
+
+
 max_retries = 5
 attempt = 0
 while attempt < max_retries:
     result = subprocess.run(["python", file_path], capture_output=True, text=True)
+    execution_time = measure_execution_time()
     
-    # Check if the code executed successfully (no errors) AND tests passed
-    if result.returncode == 0 and "All tests passed successfully!" in result.stdout:
-        print("Code creation completed successfully!")
-        # Open the generated file using subprocess
-        subprocess.call(["start", file_path], shell=True) 
+    if execution_time is not None:
+        print(f"Code creation completed successfully in {execution_time:.2f} ms!")
         break
     else:  # Error or test failure
         if result.stderr:
@@ -98,3 +103,43 @@ while attempt < max_retries:
 
 if attempt == max_retries:
     print("Code generation FAILED")
+    exit()
+
+original_code = generated_code
+original_time = execution_time
+
+# Optimization step
+if original_time is not None:
+    prompt_optimization = f"""Here is the code and unit tests generated for a program that implements {program_idea}: {generated_code}.
+                         It passed all unit tests successfully in {original_time:.2f} ms.
+                         Please optimize the code to make it run faster while keeping the same unit tests and functionality.
+                         Show me the entire optimized code. Do NOT include any explanations or comments in the code.
+                         Also DO NOT write ```python ``` in the code!"""
+    completion_optimization = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant for generating optimized Python code."},
+            {"role": "user", "content": prompt_optimization}
+        ]
+    )
+
+    optimized_code = completion_optimization.choices[0].message.content
+
+    with open(file_path, "w") as file:
+        file.write(optimized_code)
+
+    execution_time_optimized = measure_execution_time()
+
+    if execution_time_optimized is not None:
+        if execution_time_optimized < original_time:
+            print(f"Code running time optimized! It now runs in {execution_time_optimized:.2f} ms, while before it was {original_time:.2f} ms.")
+        else:
+            print("Optimization attempt did not improve running time.")
+            with open(file_path, "w") as file:
+                file.write(original_code)
+    else:
+        print("Optimized code failed. Restoring original code.")
+        with open(file_path, "w") as file:
+            file.write(original_code)
+# Open the generated file using subprocess
+subprocess.call(["start", file_path], shell=True) 
