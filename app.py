@@ -4,6 +4,7 @@ import random
 import time
 from dotenv import load_dotenv
 from openai import OpenAI
+import pylint.lint
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -64,6 +65,26 @@ def measure_execution_time():
         return execution_time
     return None
 
+def run_lint_check(file_path):
+    lint_result = subprocess.run(["pylint", file_path], capture_output=True, text=True)
+    return lint_result
+
+def fix_lint_issues(code, lint_output):
+    print(lint_output)
+    print("code: " + code)
+    prompt = f"""Here is the code generated for a program that implements {program_idea}: {code}. 
+    However, it has lint issues: {lint_output}. Please fix these issues and show me the entire corrected code.
+    IMPORTANT: The fixed code should be written in a way that it can be run directly! Do NOT include any explanations or comments in the code.
+    Also DO NOT write ```python ``` in the code!"""
+
+    completion = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant for generating, improving, and fixing Python code."},
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return completion.choices[0].message.content
 
 max_retries = 5
 attempt = 0
@@ -141,5 +162,25 @@ if original_time is not None:
         print("Optimized code failed. Restoring original code.")
         with open(file_path, "w") as file:
             file.write(original_code)
+
+# Lint check step
+lint_attempts = 0
+while lint_attempts < 3:
+    lint_result = run_lint_check(file_path)
+    if "Your code has been rated at 10.00/10" in lint_result.stdout:
+        print("Amazing. No lint errors/warnings.")
+        break
+    else:
+        print("Lint issues found. Attempting to fix...")
+        lint_output = lint_result.stdout
+        optimized_code = fix_lint_issues(optimized_code, lint_output)
+        with open(file_path, "w") as file:
+            file.write(optimized_code)
+        lint_attempts += 1
+
+if lint_attempts == 3:
+    print("There are still lint errors/warnings.")
+    exit()
+
 # Open the generated file using subprocess
 subprocess.call(["start", file_path], shell=True) 
