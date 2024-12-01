@@ -1,30 +1,35 @@
-def is_palindrome(num):
-    """Check if a number is a palindrome."""
-    if num < 0:
+def is_palindrome(n):
+    """Check if the given number n is a palindrome."""
+    if n < 0:
         return False
-    str_num = str(num)
-    left, right = 0, len(str_num) - 1
-    while left < right:
-        if str_num[left] != str_num[right]:
+    s = str(n)
+    length = len(s)
+    for i in range(length // 2):
+        if s[i] != s[length - 1 - i]:
             return False
-        left += 1
-        right -= 1
     return True
 
 def run_tests():
-    """Run tests for the is_palindrome function."""
+    """Run a set of tests to validate the is_palindrome function."""
     test_cases = [
-        (121, True), (12321, True), (123, False),
-        (1, True), (0, True), (-121, False),
-        (10, False), (1001, True), (2002, True),
+        (121, True),
+        (-121, False),
+        (10, False),
+        (0, True),
+        (12321, True),
+        (123321, True),
+        (12345, False),
+        (1, True),
+        (11111, True),
+        (1001, True),
+        (10001, True),
         (1234321, True)
     ]
-
-    for input_val, expected in test_cases:
-        actual = is_palindrome(input_val)
-        assert actual == expected, f'Test failed: input({input_val}), expected({expected}), actual({actual})'
+    
+    for number, expected in test_cases:
+        result = is_palindrome(number)
+        assert result == expected, f'Test failed: {number}, expected {expected}, got {result}'
 
     print('All tests passed successfully!')
 
-if __name__ == "__main__":
-    run_tests()
+run_tests()

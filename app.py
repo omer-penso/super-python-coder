@@ -4,8 +4,9 @@ import random
 import time
 from dotenv import load_dotenv
 from openai import OpenAI
-from colorama import Fore, Back, Style, init
-import pylint.lint
+from colorama import Fore, init
+from tqdm import tqdm
+#import pylint.lint
 
 init()
 load_dotenv()
@@ -89,8 +90,9 @@ def fix_lint_issues(code, lint_output):
     return completion.choices[0].message.content
 
 max_retries = 5
-attempt = 0
-while attempt < max_retries:
+#attempt = 0
+for attempt in tqdm(range(1, max_retries + 1), desc="Retrying Code Generation"):
+    print(f"attempt: {attempt}")
     result = subprocess.run(["python", file_path], capture_output=True, text=True)
     execution_time = measure_execution_time()
     
@@ -121,10 +123,10 @@ while attempt < max_retries:
         with open(file_path, "w") as file:
             file.write(generated_code)
         
-        attempt += 1
+        #attempt += 1
         print(f"Retrying... Attempt {attempt}/{max_retries}")
 
-if attempt == max_retries:
+if execution_time is None:
     print(Fore.RED + "Code generation FAILED")
     exit()
 
