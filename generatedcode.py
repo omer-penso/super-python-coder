@@ -1,8 +1,8 @@
-def is_palindrome(number):
-    """Check if the given number is a palindrome."""
-    if number < 0:
+def is_palindrome(num):
+    """Check if a number is a palindrome."""
+    if num < 0:
         return False
-    str_num = str(number)
+    str_num = str(num)
     left, right = 0, len(str_num) - 1
     while left < right:
         if str_num[left] != str_num[right]:
@@ -12,17 +12,17 @@ def is_palindrome(number):
     return True
 
 def run_tests():
-    """Run the test cases to check the is_palindrome function."""
+    """Run tests for the is_palindrome function."""
     test_cases = [
-        (121, True), ( -121, False), (10, False), (12321, True),
-        (0, True), (1, True), (123454321, True), (123456, False),
-        (99999, True), (12345678987654321, True), (-1, False),
-        (1001, True), (10001, True), (1000021, False), (1000001, True),
+        (121, True), (12321, True), (123, False),
+        (1, True), (0, True), (-121, False),
+        (10, False), (1001, True), (2002, True),
+        (1234321, True)
     ]
 
-    for input_value, expected in test_cases:
-        result = is_palindrome(input_value)
-        assert result == expected, f'Test failed: Input: {input_value}, Expected: {expected}, Actual: {result}'
+    for input_val, expected in test_cases:
+        actual = is_palindrome(input_val)
+        assert actual == expected, f'Test failed: input({input_val}), expected({expected}), actual({actual})'
 
     print('All tests passed successfully!')
 

@@ -4,8 +4,10 @@ import random
 import time
 from dotenv import load_dotenv
 from openai import OpenAI
+from colorama import Fore, Back, Style, init
 import pylint.lint
 
+init()
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
@@ -24,15 +26,15 @@ PROGRAMS_LIST = [
     "A program that implements dijkstra's algorithm.",
 ]
 
-print("I'm Super Python Coder. Tell me, which program would you like me to code for you?")
-user_input = input("If you don't have an idea, just press enter, and I will choose a random program to code: ")
+print(Fore.LIGHTMAGENTA_EX + "I'm Super Python Coder. Tell me, which program would you like me to code for you?")
+user_input = input(Fore.LIGHTMAGENTA_EX + "If you don't have an idea, just press enter, and I will choose a random program to code: ")
 
 if not user_input:
     program_idea = random.choice(PROGRAMS_LIST)
 else:
     program_idea = user_input
 
-print(f"Chosen program idea: {program_idea}\n")
+print(Fore.YELLOW + f"Chosen program idea: {program_idea}\n")
 
 prompt = f"""Create a python program that implements: {program_idea}. 
             Do NOT write any explanations and DO NOT write example usage and DO NOT write ```python ``` in the code, just show the code itself.
@@ -70,8 +72,8 @@ def run_lint_check(file_path):
     return lint_result
 
 def fix_lint_issues(code, lint_output):
-    print(lint_output)
-    print("code: " + code)
+    #print(lint_output)
+    #print("code: " + code)
     prompt = f"""Here is the code generated for a program that implements {program_idea}: {code}. 
     However, it has lint issues: {lint_output}. Please fix these issues and show me the entire corrected code.
     IMPORTANT: The fixed code should be written in a way that it can be run directly! Do NOT include any explanations or comments in the code.
@@ -93,7 +95,7 @@ while attempt < max_retries:
     execution_time = measure_execution_time()
     
     if execution_time is not None:
-        print(f"Code creation completed successfully in {execution_time:.2f} ms!")
+        print(Fore.BLUE + f"Code creation completed successfully in {execution_time:.2f} ms!")
         break
     else:  # Error or test failure
         if result.stderr:
@@ -123,7 +125,7 @@ while attempt < max_retries:
         print(f"Retrying... Attempt {attempt}/{max_retries}")
 
 if attempt == max_retries:
-    print("Code generation FAILED")
+    print(Fore.RED + "Code generation FAILED")
     exit()
 
 original_code = generated_code
@@ -153,13 +155,13 @@ if original_time is not None:
 
     if execution_time_optimized is not None:
         if execution_time_optimized < original_time:
-            print(f"Code running time optimized! It now runs in {execution_time_optimized:.2f} ms, while before it was {original_time:.2f} ms.")
+            print(Fore.GREEN + f"Code running time optimized! It now runs in {execution_time_optimized:.2f} ms, while before it was {original_time:.2f} ms.")
         else:
-            print("Optimization attempt did not improve running time.")
+            print(Fore.RED + "Optimization attempt did not improve running time.")
             with open(file_path, "w") as file:
                 file.write(original_code)
     else:
-        print("Optimized code failed. Restoring original code.")
+        print(Fore.RED + "Optimized code failed. Restoring original code.")
         with open(file_path, "w") as file:
             file.write(original_code)
 
@@ -168,10 +170,10 @@ lint_attempts = 0
 while lint_attempts < 3:
     lint_result = run_lint_check(file_path)
     if "Your code has been rated at 10.00/10" in lint_result.stdout:
-        print("Amazing. No lint errors/warnings.")
+        print(Fore.GREEN + "Amazing. No lint errors/warnings.")
         break
     else:
-        print("Lint issues found. Attempting to fix...")
+        print(Fore.YELLOW + "Lint issues found. Attempting to fix...")
         lint_output = lint_result.stdout
         optimized_code = fix_lint_issues(optimized_code, lint_output)
         with open(file_path, "w") as file:
@@ -179,7 +181,7 @@ while lint_attempts < 3:
         lint_attempts += 1
 
 if lint_attempts == 3:
-    print("There are still lint errors/warnings.")
+    print(Fore.RED + "There are still lint errors/warnings.")
     exit()
 
 # Open the generated file using subprocess
